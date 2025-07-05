@@ -8,6 +8,7 @@ import UserAssets from './components/UserAssets';
 import History from './components/History';
 import Issues from './components/Issues';
 import Settings from './components/Settings';
+import DatabaseStatus from './components/DatabaseStatus';
 
 function App() {
   const [currentView, setCurrentView] = useState('dashboard');
@@ -36,9 +37,12 @@ function App() {
   };
 
   return (
-    <Layout currentView={currentView} onViewChange={setCurrentView}>
-      {renderCurrentView()}
-    </Layout>
+    <>
+      <DatabaseStatus />
+      <Layout currentView={currentView} onViewChange={setCurrentView}>
+        {renderCurrentView()}
+      </Layout>
+    </>
   );
 }
 
