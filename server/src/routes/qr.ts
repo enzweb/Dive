@@ -1,17 +1,43 @@
-import { Router } from 'express';
+import express from 'express';
+import { getDatabase } from '../database/database';
 
-const router = Router();
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
+const router = express.Router();
+const db = getDatabase();
 
-// Routes QR Code - redirection vers le frontend
-router.get('/user/:id', (req, res) => {
-  const { id } = req.params;
-  res.redirect(`${CLIENT_URL}/scanner?type=user&id=${id}`);
+// Get asset by QR code
+router.get('/asset/:qrCode', async (req, res) => {
+  try {
+    const asset = await db.get(
+      'SELECT * FROM assets WHERE qr_code = ?',
+      [req.params.qrCode]
+    );
+    
+    if (!asset) {
+      return res.status(404).json({ error: 'Asset not found' });
+    }
+    
+    res.json(asset);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch asset by QR code' });
+  }
 });
 
-router.get('/asset/:id', (req, res) => {
-  const { id } = req.params;
-  res.redirect(`${CLIENT_URL}/scanner?type=asset&id=${id}`);
+// Get user by QR code (assuming users also have QR codes)
+router.get('/user/:qrCode', async (req, res) => {
+  try {
+    const user = await db.get(
+      'SELECT * FROM users WHERE id = ?',
+      [req.params.qrCode]
+    );
+    
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to fetch user by QR code' });
+  }
 });
 
-export { router as qrRoutes };
+export default router;

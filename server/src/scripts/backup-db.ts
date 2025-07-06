@@ -1,75 +1,43 @@
-import { DatabaseManager } from '../database/database.js';
-import { join, dirname } from 'path';
-import { existsSync, mkdirSync, readdirSync, statSync, unlinkSync } from 'fs';
-import { fileURLToPath } from 'url';
+import fs from 'fs';
+import path from 'path';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const DB_PATH = process.env.DB_PATH || './divemanager.db';
+const BACKUP_DIR = './backups';
 
-function createBackup() {
+async function backupDatabase() {
   try {
-    // Créer le dossier de sauvegarde s'il n'existe pas
-    const backupDir = join(__dirname, '../../..', 'backups');
-    if (!existsSync(backupDir)) {
-      mkdirSync(backupDir, { recursive: true });
+    // Create backup directory if it doesn't exist
+    if (!fs.existsSync(BACKUP_DIR)) {
+      fs.mkdirSync(BACKUP_DIR, { recursive: true });
     }
 
-    // Nom du fichier de sauvegarde avec timestamp
+    // Generate backup filename with timestamp
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const backupPath = join(backupDir, `divemanager-backup-${timestamp}.db`);
+    const backupPath = path.join(BACKUP_DIR, `divemanager-backup-${timestamp}.db`);
 
-    // Créer la sauvegarde
-    const db = new DatabaseManager();
-    db.backup(backupPath);
-
-    // Afficher les statistiques
-    const stats = db.getStats();
-    console.log('\n📊 Statistiques de la base de données:');
-    console.log(`   👥 Utilisateurs: ${stats.totalUsers}`);
-    console.log(`   📦 Équipements: ${stats.totalAssets}`);
-    console.log(`   📋 Mouvements: ${stats.totalMovements}`);
-    console.log(`   ⚠️  Problèmes ouverts: ${stats.openIssues}`);
-
-    db.close();
-
-    console.log(`\n✅ Sauvegarde créée avec succès: ${backupPath}`);
+    // Copy database file
+    fs.copyFileSync(DB_PATH, backupPath);
     
-    // Nettoyer les anciennes sauvegardes (garder les 10 dernières)
-    cleanOldBackups(backupDir);
-
+    console.log(`Database backed up to: ${backupPath}`);
+    
+    // Clean up old backups (keep last 10)
+    const backupFiles = fs.readdirSync(BACKUP_DIR)
+      .filter(file => file.startsWith('divemanager-backup-'))
+      .sort()
+      .reverse();
+    
+    if (backupFiles.length > 10) {
+      const filesToDelete = backupFiles.slice(10);
+      filesToDelete.forEach(file => {
+        fs.unlinkSync(path.join(BACKUP_DIR, file));
+        console.log(`Deleted old backup: ${file}`);
+      });
+    }
+    
   } catch (error) {
-    console.error('❌ Erreur lors de la sauvegarde:', error);
+    console.error('Backup failed:', error);
     process.exit(1);
   }
 }
 
-function cleanOldBackups(backupDir: string) {
-  try {
-    const files = readdirSync(backupDir)
-      .filter(file => file.startsWith('divemanager-backup-') && file.endsWith('.db'))
-      .map(file => ({
-        name: file,
-        path: join(backupDir, file),
-        mtime: statSync(join(backupDir, file)).mtime
-      }))
-      .sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
-
-    // Garder les 10 dernières sauvegardes
-    const filesToDelete = files.slice(10);
-    
-    filesToDelete.forEach(file => {
-      unlinkSync(file.path);
-      console.log(`🗑️  Ancienne sauvegarde supprimée: ${file.name}`);
-    });
-
-    if (filesToDelete.length > 0) {
-      console.log(`\n🧹 ${filesToDelete.length} ancienne(s) sauvegarde(s) supprimée(s)`);
-    }
-
-  } catch (error) {
-    console.warn('⚠️  Erreur lors du nettoyage des anciennes sauvegardes:', error);
-  }
-}
-
-// Exécuter la sauvegarde
-createBackup();
+backupDatabase();
