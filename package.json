@@ -1,5 +1,5 @@
 {
-  "name": "dive-manager",
+  "name": "divemanager-frontend",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -8,19 +8,15 @@
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "serve": "vite preview --host 0.0.0.0 --port 3000",
-    "backup": "node scripts/backup-db.js",
-    "restore": "node scripts/restore-db.js"
+    "serve": "vite preview --host 0.0.0.0 --port 3000"
   },
   "dependencies": {
-    "better-sqlite3": "^9.2.2",
     "lucide-react": "^0.344.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.1",
-    "@types/better-sqlite3": "^7.6.8",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
@@ -31,7 +27,6 @@
     "globals": "^15.9.0",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
-    "terser": "^5.43.1",
     "typescript": "^5.5.3",
     "typescript-eslint": "^8.3.0",
     "vite": "^5.4.2"

@@ -2,22 +2,138 @@
 
 ## 🏊‍♂️ Description
 
-DiveManager est un système complet de gestion de matériel de plongée avec scanner QR code intégré et base de données SQLite, conçu spécialement pour les clubs de plongée.
+DiveManager est un système complet de gestion de matériel de plongée avec scanner QR code intégré et architecture fullstack (Node.js + React), conçu spécialement pour les clubs de plongée.
 
 ## ✨ Fonctionnalités
 
-- **Scanner QR Code** : Check-in/check-out automatique par scan
+- **Architecture Fullstack** : Backend Node.js + Frontend React
+- **API REST** : Communication client-serveur sécurisée
 - **Base de données SQLite** : Stockage persistant et fiable
+- **Scanner QR Code** : Check-in/check-out automatique par scan
 - **Gestion des utilisateurs** : Niveaux de certification FFESSM
 - **Suivi des équipements** : Détendeurs, combinaisons, masques, palmes, gilets, bouteilles
 - **Historique complet** : Tous les mouvements sont enregistrés
 - **Sauvegarde automatique** : Scripts de backup/restore intégrés
 - **Interface responsive** : Optimisée pour mobile et tablette
-- **Gestion des droits** : Admin, Gestionnaire, Utilisateur
 
-## 🗄️ Base de Données
+## 🏗️ Architecture
 
-### SQLite - Parfait pour Debian/Raspberry Pi
+```
+DiveManager/
+├── server/                 # Backend Node.js + Express
+│   ├── src/
+│   │   ├── database/      # Gestion SQLite + Repositories
+│   │   ├── routes/        # Routes API REST
+│   │   └── server.ts      # Serveur principal
+│   └── dist/              # Build du backend
+├── src/                   # Frontend React
+│   ├── components/        # Composants UI
+│   ├── services/          # Services API
+│   └── hooks/             # Hooks React
+├── dist/                  # Build du frontend
+└── deployment/            # Scripts de déploiement
+```
+
+## 🚀 Installation sur Serveur Debian/Raspberry Pi
+
+### 1. Installation Automatique
+
+```bash
+# Télécharger et exécuter le script d'installation
+wget https://raw.githubusercontent.com/enzweb/Dive/main/deployment/install-fullstack.sh
+sudo bash install-fullstack.sh votre-domaine.com
+```
+
+### 2. Déploiement de l'Application
+
+```bash
+# Cloner le projet
+cd /var/www/divemanager
+git clone https://github.com/enzweb/Dive.git .
+
+# Déployer l'application complète
+sudo bash deployment/deploy-fullstack.sh votre-domaine.com
+```
+
+### 3. Vérification de l'Installation
+
+```bash
+# Vérifier le backend
+pm2 status
+curl http://localhost:3001/health
+
+# Vérifier le frontend
+curl http://votre-domaine.com
+
+# Vérifier l'API
+curl http://votre-domaine.com/api/stats
+```
+
+## 🔧 Développement Local
+
+### Backend
+
+```bash
+cd server
+npm install
+npm run dev  # Démarre sur le port 3001
+```
+
+### Frontend
+
+```bash
+npm install
+npm run dev  # Démarre sur le port 3000
+```
+
+### Variables d'Environnement
+
+**Backend** (`server/.env`):
+```env
+PORT=3001
+NODE_ENV=development
+CLIENT_URL=http://localhost:3000
+DB_PATH=./divemanager.db
+```
+
+**Frontend** (`.env`):
+```env
+VITE_API_URL=http://localhost:3001/api
+VITE_APP_TITLE=DiveManager
+VITE_BASE_URL=http://localhost:3000
+```
+
+## 📡 API REST
+
+### Endpoints Principaux
+
+- `GET /api/users` - Liste des utilisateurs
+- `GET /api/assets` - Liste des équipements
+- `GET /api/movements` - Historique des mouvements
+- `POST /api/checkout` - Sortie d'équipement
+- `POST /api/checkin` - Retour d'équipement
+- `GET /api/stats` - Statistiques du tableau de bord
+- `GET /health` - Santé du serveur
+
+### Exemple d'utilisation
+
+```javascript
+// Checkout d'un équipement
+const response = await fetch('/api/checkout', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    assetId: 'asset-123',
+    userId: 'user-456',
+    performedBy: 'Admin',
+    notes: 'Sortie plongée épave'
+  })
+});
+```
+
+## 🗄️ Base de Données SQLite
+
+### Avantages pour Debian/Raspberry Pi
 
 - **Léger** : Idéal pour Raspberry Pi
 - **Sans serveur** : Pas de daemon à gérer
@@ -25,7 +141,7 @@ DiveManager est un système complet de gestion de matériel de plongée avec sca
 - **Sauvegarde simple** : Un seul fichier
 - **Performance** : Excellent pour applications moyennes
 
-### Structure de la base
+### Structure
 
 - **users** : Utilisateurs et leurs certifications
 - **assets** : Équipements de plongée
@@ -33,199 +149,102 @@ DiveManager est un système complet de gestion de matériel de plongée avec sca
 - **issues** : Problèmes signalés
 - **notifications** : Alertes système
 
-## 🚀 Installation sur Serveur Debian/Raspberry Pi
-
-### 1. Installation automatique
-
-```bash
-# Télécharger et exécuter le script d'installation
-wget https://votre-domaine.com/install-debian.sh
-sudo bash install-debian.sh
-```
-
-### 2. Déploiement de l'application
-
-```bash
-# Copier les fichiers dans /var/www/divemanager
-cd /var/www/divemanager
-git clone https://github.com/votre-repo/divemanager.git .
-
-# Installer les dépendances et builder
-npm ci
-npm run build
-
-# Configurer Nginx
-sudo bash deployment/configure-nginx.sh votre-domaine.com
-
-# Démarrer les services
-sudo systemctl start nginx
-sudo systemctl enable nginx
-```
-
-### 3. Initialisation de la base de données
-
-La base de données SQLite est automatiquement créée au premier lancement :
-
-```bash
-# La base sera créée dans : /var/www/divemanager/divemanager.db
-# Les données de test sont automatiquement insérées
-```
-
-## 🔧 Gestion de la Base de Données
-
-### Sauvegarde
+## 🔄 Gestion des Sauvegardes
 
 ```bash
 # Sauvegarde manuelle
+cd /var/www/divemanager/server
 npm run backup
 
-# Sauvegarde automatique (cron)
-# Ajouter dans crontab : 0 2 * * * cd /var/www/divemanager && npm run backup
-```
+# Sauvegarde automatique (configurée par défaut à 2h du matin)
+crontab -l
 
-### Restauration
-
-```bash
-# Restaurer depuis une sauvegarde
+# Restaurer une sauvegarde
 npm run restore backups/divemanager-backup-2024-01-15T10-30-00-000Z.db
 ```
 
-### Maintenance
+## 📱 Workflow QR Code
 
-```bash
-# Vérifier l'état de la base
-sqlite3 divemanager.db "PRAGMA integrity_check;"
-
-# Optimiser la base
-sqlite3 divemanager.db "VACUUM;"
-
-# Voir les statistiques
-sqlite3 divemanager.db "SELECT 
-  (SELECT COUNT(*) FROM users) as users,
-  (SELECT COUNT(*) FROM assets) as assets,
-  (SELECT COUNT(*) FROM movements) as movements;"
-```
-
-## 📱 Utilisation Mobile
-
-L'application est entièrement responsive et optimisée pour :
-
-- **Smartphones** : Interface tactile adaptée
-- **Tablettes** : Affichage optimisé pour les écrans moyens
-- **Scanner QR** : Interface simplifiée pour scan rapide
-- **Mode hors-ligne** : Données stockées localement
-
-## 🔧 Configuration
-
-### Variables d'environnement
-
-Créez un fichier `.env` :
-
-```env
-VITE_APP_TITLE=DiveManager
-VITE_BASE_URL=https://votre-domaine.com
-VITE_DB_PATH=./divemanager.db
-```
-
-### Nginx
-
-La configuration Nginx inclut :
-
-- **Compression gzip** pour les performances
-- **Cache des assets** statiques
-- **Redirection des routes** QR vers l'application
-- **Sécurité** : Headers de sécurité
-
-## 📋 Workflow QR Code
-
-1. **Générer les QR codes** : Utiliser le composant `QRCodeDisplay`
+1. **Générer les QR codes** : Via l'interface d'administration
 2. **Imprimer les étiquettes** : Fonction d'impression intégrée
 3. **Scanner utilisateur** : Premier scan obligatoire
 4. **Scanner équipements** : Autant que nécessaire
 5. **Validation automatique** : Sortie/retour selon l'état
 6. **Sauvegarde automatique** : Tout est enregistré en base
 
-## 🔒 Sécurité
+## 🔒 Sécurité et Production
 
-- **HTTPS recommandé** : Certificat SSL/TLS
-- **Firewall** : Ports 80/443 uniquement
-- **Sauvegarde chiffrée** : Scripts de backup sécurisés
-- **Logs** : Journalisation des actions
-- **Base locale** : Pas d'exposition réseau de la DB
-
-## 📊 Monitoring
+### Configuration HTTPS
 
 ```bash
-# Vérifier le statut
-sudo systemctl status nginx
-sudo systemctl status divemanager
+# Installer Certbot
+sudo apt install -y certbot python3-certbot-nginx
 
-# Logs application
-sudo tail -f /var/log/nginx/access.log
-sudo tail -f /var/log/nginx/error.log
-
-# Statistiques base de données
-npm run backup  # Affiche aussi les stats
+# Obtenir le certificat SSL
+sudo certbot --nginx -d votre-domaine.com
 ```
 
-## 🔄 Mise à jour
+### Firewall
+
+```bash
+sudo ufw allow 80/tcp
+sudo ufw allow 443/tcp
+sudo ufw enable
+```
+
+### Monitoring
+
+```bash
+# Logs du backend
+pm2 logs divemanager-server
+
+# Logs Nginx
+sudo tail -f /var/log/nginx/access.log
+
+# Statistiques de la base
+curl http://localhost:3001/api/stats
+```
+
+## 🛠️ Maintenance
+
+### Mise à jour
 
 ```bash
 cd /var/www/divemanager
 
 # Sauvegarder avant mise à jour
-npm run backup
+cd server && npm run backup
 
 # Mettre à jour le code
 git pull origin main
-npm ci
-npm run build
 
-# Redémarrer les services
+# Rebuilder et redémarrer
+cd server && npm run build
+pm2 restart divemanager-server
+
+cd .. && npm run build
 sudo systemctl reload nginx
 ```
 
-## 🛠️ Développement
-
-### Structure du projet
-
-```
-src/
-├── database/           # Gestion SQLite
-│   ├── schema.sql     # Structure de la base
-│   ├── database.ts    # Gestionnaire principal
-│   └── repositories/ # Accès aux données
-├── services/          # Logique métier
-├── hooks/            # Hooks React pour la DB
-└── components/       # Interface utilisateur
-```
-
-### Scripts disponibles
+### Optimisation de la Base
 
 ```bash
-npm run dev          # Développement
-npm run build        # Production
-npm run backup       # Sauvegarde DB
-npm run restore      # Restauration DB
+# Vérifier l'intégrité
+sqlite3 divemanager.db "PRAGMA integrity_check;"
+
+# Optimiser
+sqlite3 divemanager.db "VACUUM;"
 ```
 
-## 📞 Support
+## 🎯 Points Clés de l'Architecture Fullstack
 
-Pour toute question ou problème :
+✅ **Séparation Frontend/Backend** : Architecture moderne et scalable  
+✅ **API REST** : Communication standardisée  
+✅ **Base SQLite** : Parfaite pour Raspberry Pi  
+✅ **PM2** : Gestion robuste des processus  
+✅ **Nginx** : Reverse proxy et serveur statique  
+✅ **Sauvegardes automatiques** : Cron quotidien  
+✅ **HTTPS** : Certificat Let's Encrypt gratuit  
+✅ **Monitoring** : Logs et métriques intégrés  
 
-1. Vérifier les logs Nginx et application
-2. Tester la connectivité réseau
-3. Valider la configuration DNS
-4. Contrôler les permissions fichiers
-5. Vérifier l'intégrité de la base SQLite
-
-## 🎯 Roadmap
-
-- [x] Base de données SQLite intégrée
-- [x] Sauvegarde/restauration automatique
-- [x] Interface responsive complète
-- [ ] Authentification utilisateurs
-- [ ] Notifications push
-- [ ] Export/import données CSV
-- [ ] Application mobile native
-- [ ] Synchronisation multi-sites
+L'application est maintenant **prête pour la production** avec une architecture fullstack robuste ! 🚀
