@@ -12,11 +12,10 @@ import {
   Edit,
   X
 } from 'lucide-react';
-import { Issue } from '../types';
 import { mockIssues } from '../data/mockData';
 
 export default function Issues() {
-  const [issues, setIssues] = useState<Issue[]>(mockIssues);
+  const [issues, setIssues] = useState(mockIssues);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [severityFilter, setSeverityFilter] = useState<string>('all');

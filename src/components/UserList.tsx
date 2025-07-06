@@ -9,26 +9,33 @@ import {
   Mail,
   Building
 } from 'lucide-react';
-import { User as UserType } from '../types';
-import { mockUsers, mockAssets } from '../data/mockData';
+import { useUsers, useAssets } from '../hooks/useApi';
 
 export default function UserList() {
-  const [users, setUsers] = useState<UserType[]>(mockUsers);
+  const { users, loading: usersLoading } = useUsers();
+  const { assets } = useAssets();
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredUsers = users.filter(user => 
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    user.department.toLowerCase().includes(searchTerm.toLowerCase())
+    user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getUserAssetCount = (userName: string) => {
-    return mockAssets.filter(asset => asset.assignedTo === userName).length;
+    return assets.filter(asset => asset.assignedTo === userName).length;
   };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR');
   };
+
+  if (usersLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -46,7 +53,7 @@ export default function UserList() {
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
           <input
             type="text"
-            placeholder="Rechercher par nom, email ou département..."
+            placeholder="Rechercher par nom ou email..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -67,7 +74,7 @@ export default function UserList() {
                 </div>
                 <div className="ml-4 flex-1">
                   <h3 className="text-lg font-medium text-gray-900">{user.name}</h3>
-                  <p className="text-sm text-gray-500">{user.position}</p>
+                  <p className="text-sm text-gray-500">{user.certificationLevel}</p>
                 </div>
               </div>
               
@@ -75,10 +82,6 @@ export default function UserList() {
                 <div className="flex items-center text-sm text-gray-600">
                   <Mail className="h-4 w-4 mr-2" />
                   {user.email}
-                </div>
-                <div className="flex items-center text-sm text-gray-600">
-                  <Building className="h-4 w-4 mr-2" />
-                  {user.department}
                 </div>
                 <div className="flex items-center text-sm text-gray-600">
                   <Package className="h-4 w-4 mr-2" />

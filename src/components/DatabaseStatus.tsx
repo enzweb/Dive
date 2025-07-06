@@ -11,8 +11,8 @@ export default function DatabaseStatus() {
         <div className="flex items-center space-x-3">
           <Loader className="h-5 w-5 text-blue-600 animate-spin" />
           <div>
-            <h4 className="text-sm font-medium text-blue-900">Initialisation</h4>
-            <p className="text-sm text-blue-700">Chargement de la base de données...</p>
+            <h4 className="text-sm font-medium text-blue-900">Connexion</h4>
+            <p className="text-sm text-blue-700">Connexion au serveur...</p>
           </div>
         </div>
       </div>
@@ -25,7 +25,7 @@ export default function DatabaseStatus() {
         <div className="flex items-center space-x-3">
           <AlertTriangle className="h-5 w-5 text-red-600" />
           <div>
-            <h4 className="text-sm font-medium text-red-900">Erreur Base de Données</h4>
+            <h4 className="text-sm font-medium text-red-900">Erreur Serveur</h4>
             <p className="text-sm text-red-700">{error}</p>
           </div>
         </div>
@@ -39,8 +39,8 @@ export default function DatabaseStatus() {
         <div className="flex items-center space-x-3">
           <CheckCircle className="h-5 w-5 text-green-600" />
           <div>
-            <h4 className="text-sm font-medium text-green-900">Base de Données</h4>
-            <p className="text-sm text-green-700">SQLite connectée</p>
+            <h4 className="text-sm font-medium text-green-900">Serveur</h4>
+            <p className="text-sm text-green-700">Connecté</p>
           </div>
         </div>
       </div>

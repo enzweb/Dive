@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Plus, 
   Search, 
@@ -14,23 +14,18 @@ import {
   QrCode
 } from 'lucide-react';
 import { Asset } from '../types';
-import { mockAssets } from '../data/mockData';
+import { useAssets } from '../hooks/useApi';
 
 export default function AssetList() {
-  const [assets, setAssets] = useState<Asset[]>(mockAssets);
+  const { assets, loading, searchAssets } = useAssets();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
 
-  const filteredAssets = assets.filter(asset => {
-    const matchesSearch = asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         asset.assetTag.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         asset.serialNumber.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'all' || asset.status === statusFilter;
-    const matchesCategory = categoryFilter === 'all' || asset.category === categoryFilter;
-    return matchesSearch && matchesStatus && matchesCategory;
-  });
+  useEffect(() => {
+    searchAssets(searchTerm, statusFilter, categoryFilter);
+  }, [searchTerm, statusFilter, categoryFilter]);
 
   const categories = [...new Set(assets.map(asset => asset.category))];
 
@@ -82,6 +77,14 @@ export default function AssetList() {
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('fr-FR');
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -171,7 +174,7 @@ export default function AssetList() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {filteredAssets.map((asset) => (
+              {assets.map((asset) => (
                 <tr key={asset.id} className={`hover:bg-gray-50 transition-colors ${
                   asset.hasIssues ? 'bg-red-50 border-l-4 border-red-400' : ''
                 }`}>
@@ -234,7 +237,7 @@ export default function AssetList() {
             </tbody>
           </table>
         </div>
-        {filteredAssets.length === 0 && (
+        {assets.length === 0 && (
           <div className="text-center py-12">
             <Package className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">Aucun équipement trouvé</h3>
@@ -248,13 +251,13 @@ export default function AssetList() {
       {/* Summary */}
       <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
         <div className="flex justify-between items-center text-sm text-gray-600">
-          <span>Total: {filteredAssets.length} équipement(s)</span>
+          <span>Total: {assets.length} équipement(s)</span>
           <div className="flex space-x-4">
             <span className="text-red-600">
-              Avec problèmes: {filteredAssets.filter(a => a.hasIssues).length}
+              Avec problèmes: {assets.filter(a => a.hasIssues).length}
             </span>
             <span className="text-blue-600">
-              En sortie: {filteredAssets.filter(a => a.status === 'checked_out').length}
+              En sortie: {assets.filter(a => a.status === 'checked_out').length}
             </span>
           </div>
         </div>

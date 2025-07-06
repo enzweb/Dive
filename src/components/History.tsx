@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, 
   Filter, 
@@ -9,21 +9,16 @@ import {
   Calendar,
   User
 } from 'lucide-react';
-import { Movement } from '../types';
-import { mockMovements } from '../data/mockData';
+import { useMovements } from '../hooks/useApi';
 
 export default function History() {
-  const [movements, setMovements] = useState<Movement[]>(mockMovements);
+  const { movements, loading, searchMovements } = useMovements();
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
 
-  const filteredMovements = movements.filter(movement => {
-    const matchesSearch = movement.assetName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         movement.toUser?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         movement.fromUser?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = typeFilter === 'all' || movement.type === typeFilter;
-    return matchesSearch && matchesType;
-  });
+  useEffect(() => {
+    searchMovements(searchTerm, typeFilter);
+  }, [searchTerm, typeFilter]);
 
   const getMovementIcon = (type: string) => {
     switch (type) {
@@ -40,12 +35,12 @@ export default function History() {
     }
   };
 
-  const getMovementText = (movement: Movement) => {
+  const getMovementText = (movement: any) => {
     switch (movement.type) {
       case 'checkout':
-        return `Assigné à ${movement.toUser}`;
+        return `Assigné à ${movement.userName}`;
       case 'checkin':
-        return `Récupéré de ${movement.fromUser}`;
+        return `Récupéré de ${movement.userName}`;
       case 'maintenance':
         return 'Envoyé en maintenance';
       case 'retired':
@@ -96,6 +91,14 @@ export default function History() {
     });
   };
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -139,9 +142,9 @@ export default function History() {
         </div>
         <div className="p-6">
           <div className="space-y-6">
-            {filteredMovements.map((movement, index) => (
+            {movements.map((movement, index) => (
               <div key={movement.id} className="relative">
-                {index < filteredMovements.length - 1 && (
+                {index < movements.length - 1 && (
                   <div className="absolute left-5 top-10 bottom-0 w-0.5 bg-gray-200" />
                 )}
                 <div className="flex items-start space-x-4">
@@ -182,7 +185,7 @@ export default function History() {
           </div>
         </div>
         
-        {filteredMovements.length === 0 && (
+        {movements.length === 0 && (
           <div className="text-center py-12">
             <Package className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">Aucun mouvement trouvé</h3>
@@ -196,7 +199,7 @@ export default function History() {
       {/* Summary */}
       <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
         <div className="text-sm text-gray-600">
-          Total: {filteredMovements.length} mouvement(s)
+          Total: {movements.length} mouvement(s)
         </div>
       </div>
     </div>

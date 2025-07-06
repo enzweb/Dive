@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Search, 
   User, 
@@ -8,21 +8,22 @@ import {
   CheckCircle,
   Eye
 } from 'lucide-react';
-import { User as UserType, Asset } from '../types';
-import { mockUsers, mockAssets } from '../data/mockData';
+import { useUsers, useAssets } from '../hooks/useApi';
 
 export default function UserAssets() {
+  const { users, loading: usersLoading } = useUsers();
+  const { assets, loading: assetsLoading } = useAssets();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedUser, setSelectedUser] = useState<UserType | null>(null);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
 
-  const filteredUsers = mockUsers.filter(user => 
+  const filteredUsers = users.filter(user => 
     user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     user.licenseNumber?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getUserAssets = (userName: string) => {
-    return mockAssets.filter(asset => asset.assignedTo === userName);
+    return assets.filter(asset => asset.assignedTo === userName);
   };
 
   const formatDate = (dateString: string) => {
@@ -58,6 +59,14 @@ export default function UserAssets() {
         return role;
     }
   };
+
+  if (usersLoading || assetsLoading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
