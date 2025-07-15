@@ -96,6 +96,7 @@ export default function QRScanner() {
   };
 
   const handleScan = (qrCode: string) => {
+  const handleScan = async (qrCode: string) => {
     if (!session) return;
 
     if (session.status === 'scanning_user') {
@@ -128,6 +129,7 @@ export default function QRScanner() {
   };
 
   const handleAssetScan = (asset: Asset) => {
+  const handleAssetScan = async (asset: Asset) => {
     if (!session || !scannedUser) return;
 
     // Vérifier si l'équipement est déjà scanné
