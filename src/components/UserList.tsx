@@ -9,7 +9,7 @@ import {
   Mail,
   Building
 } from 'lucide-react';
-import { useUsers, useAssets } from '../hooks/useApi';
+import { useUsers, useAssets } from '../hooks/useSupabase';
 
 export default function UserList() {
   const { users, loading: usersLoading } = useUsers();

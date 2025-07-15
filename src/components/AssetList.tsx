@@ -14,7 +14,7 @@ import {
   QrCode
 } from 'lucide-react';
 import { Asset } from '../types';
-import { useAssets } from '../hooks/useApi';
+import { useAssets } from '../hooks/useSupabase';
 
 export default function AssetList() {
   const { assets, loading, searchAssets } = useAssets();

@@ -11,7 +11,7 @@ import {
   Bell,
   UserCheck
 } from 'lucide-react';
-import { useDashboard } from '../hooks/useApi';
+import { useDashboard } from '../hooks/useSupabase';
 
 export default function Dashboard() {
   const { stats, loading } = useDashboard();

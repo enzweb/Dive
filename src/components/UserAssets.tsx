@@ -8,7 +8,7 @@ import {
   CheckCircle,
   Eye
 } from 'lucide-react';
-import { useUsers, useAssets } from '../hooks/useApi';
+import { useUsers, useAssets } from '../hooks/useSupabase';
 
 export default function UserAssets() {
   const { users, loading: usersLoading } = useUsers();

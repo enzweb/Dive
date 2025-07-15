@@ -9,12 +9,18 @@ import {
   Camera,
   Scan
 } from 'lucide-react';
-import { CheckoutSession, User as UserType, Asset } from '../types';
-import { mockUsers, mockAssets } from '../data/mockData';
+import { CheckoutSession } from '../types';
+import { useQRScanner, useUsers, useAssets } from '../hooks/useSupabase';
+import type { Database } from '../lib/supabase';
 
+type User = Database['public']['Tables']['users']['Row'];
+type Asset = Database['public']['Tables']['assets']['Row'] & { assignedTo?: string | null };
 export default function QRScanner() {
+  const { scanUserQR, scanAssetQR, checkout, checkin } = useQRScanner();
+  const { users } = useUsers();
+  const { assets } = useAssets();
   const [session, setSession] = useState<CheckoutSession | null>(null);
-  const [scannedUser, setScannedUser] = useState<UserType | null>(null);
+  const [scannedUser, setScannedUser] = useState<User | null>(null);
   const [scannedAssets, setScannedAssets] = useState<Asset[]>([]);
   const [manualInput, setManualInput] = useState('');
   const [showManualInput, setShowManualInput] = useState(false);
@@ -94,24 +100,28 @@ export default function QRScanner() {
 
     if (session.status === 'scanning_user') {
       // Recherche de l'utilisateur
-      const user = mockUsers.find(u => u.qrCode === qrCode || u.id === qrCode);
-      if (user) {
-        if (!user.isActive) {
-          setMessage({ type: 'error', text: 'Utilisateur inactif' });
-          return;
+      try {
+        const user = await scanUserQR(qrCode);
+        if (user) {
+          if (!user.is_active) {
+            setMessage({ type: 'error', text: 'Utilisateur inactif' });
+            return;
+          }
+          setScannedUser(user);
+          setSession({ ...session, userId: user.id, userName: user.name, status: 'scanning_equipment' });
+          setMessage({ type: 'success', text: `Utilisateur: ${user.name} - Scannez maintenant les équipements` });
         }
-        setScannedUser(user);
-        setSession({ ...session, userId: user.id, userName: user.name, status: 'scanning_equipment' });
-        setMessage({ type: 'success', text: `Utilisateur: ${user.name} - Scannez maintenant les équipements` });
-      } else {
+      } catch (error) {
         setMessage({ type: 'error', text: 'Utilisateur non trouvé' });
       }
     } else if (session.status === 'scanning_equipment') {
       // Recherche de l'équipement
-      const asset = mockAssets.find(a => a.qrCode === qrCode || a.id === qrCode);
-      if (asset) {
-        handleAssetScan(asset);
-      } else {
+      try {
+        const asset = await scanAssetQR(qrCode);
+        if (asset) {
+          handleAssetScan(asset);
+        }
+      } catch (error) {
         setMessage({ type: 'error', text: 'Équipement non trouvé' });
       }
     }
@@ -129,14 +139,32 @@ export default function QRScanner() {
     // Logique de check-in/check-out
     if (asset.status === 'available') {
       // Check-out
-      const updatedAsset = { ...asset, status: 'checked_out' as const, assignedTo: scannedUser.name };
-      setScannedAssets([...scannedAssets, updatedAsset]);
-      setMessage({ type: 'success', text: `${asset.name} - SORTIE enregistrée` });
+      try {
+        await checkout({
+          assetId: asset.id,
+          userId: scannedUser.id,
+          performedBy: 'Scanner QR'
+        });
+        const updatedAsset = { ...asset, status: 'checked_out' as const, assignedTo: scannedUser.name };
+        setScannedAssets([...scannedAssets, updatedAsset]);
+        setMessage({ type: 'success', text: `${asset.name} - SORTIE enregistrée` });
+      } catch (error) {
+        setMessage({ type: 'error', text: 'Erreur lors de la sortie' });
+      }
     } else if (asset.status === 'checked_out' && asset.assignedTo === scannedUser.name) {
       // Check-in
-      const updatedAsset = { ...asset, status: 'available' as const, assignedTo: undefined };
-      setScannedAssets([...scannedAssets, updatedAsset]);
-      setMessage({ type: 'success', text: `${asset.name} - RETOUR enregistré` });
+      try {
+        await checkin({
+          assetId: asset.id,
+          userId: scannedUser.id,
+          performedBy: 'Scanner QR'
+        });
+        const updatedAsset = { ...asset, status: 'available' as const, assignedTo: undefined };
+        setScannedAssets([...scannedAssets, updatedAsset]);
+        setMessage({ type: 'success', text: `${asset.name} - RETOUR enregistré` });
+      } catch (error) {
+        setMessage({ type: 'error', text: 'Erreur lors du retour' });
+      }
     } else if (asset.status === 'checked_out' && asset.assignedTo !== scannedUser.name) {
       setMessage({ type: 'error', text: `Équipement assigné à ${asset.assignedTo}` });
     } else if (asset.status === 'defective') {
@@ -172,7 +200,7 @@ export default function QRScanner() {
   };
 
   const getUserAssets = (userName: string) => {
-    return mockAssets.filter(asset => asset.assignedTo === userName);
+    return assets.filter(asset => asset.assignedTo === userName);
   };
 
   return (
@@ -364,23 +392,23 @@ export default function QRScanner() {
           <h4 className="text-sm font-medium text-gray-900 mb-3">Raccourcis de test :</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
             {session.status === 'scanning_user' ? (
-              mockUsers.map(user => (
+              users.slice(0, 4).map(user => (
                 <button
                   key={user.id}
-                  onClick={() => handleScan(user.qrCode)}
+                  onClick={() => handleScan(user.qr_code)}
                   className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded hover:bg-blue-200 transition-colors text-center"
                 >
                   {user.name}
                 </button>
               ))
             ) : (
-              mockAssets.slice(0, 8).map(asset => (
+              assets.slice(0, 8).map(asset => (
                 <button
                   key={asset.id}
-                  onClick={() => handleScan(asset.qrCode)}
+                  onClick={() => handleScan(asset.qr_code)}
                   className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded hover:bg-green-200 transition-colors text-center"
                 >
-                  {asset.assetTag}
+                  {asset.asset_tag}
                 </button>
               ))
             )}

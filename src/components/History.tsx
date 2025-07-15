@@ -9,7 +9,7 @@ import {
   Calendar,
   User
 } from 'lucide-react';
-import { useMovements } from '../hooks/useApi';
+import { useMovements } from '../hooks/useSupabase';
 
 export default function History() {
   const { movements, loading, searchMovements } = useMovements();
