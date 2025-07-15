@@ -12,6 +12,7 @@ import {
 import { CheckoutSession } from '../types';
 import { useQRScanner, useUsers, useAssets } from '../hooks/useSupabase';
 import type { Database } from '../lib/supabase';
+import { mockUsers, mockAssets } from '../data/mockData';
 
 type User = Database['public']['Tables']['users']['Row'];
 type Asset = Database['public']['Tables']['assets']['Row'] & { assignedTo?: string | null };
