@@ -95,7 +95,6 @@ export default function QRScanner() {
     setMessage({ type: 'info', text: 'Scannez le QR code de l\'utilisateur' });
   };
 
-  const handleScan = (qrCode: string) => {
   const handleScan = async (qrCode: string) => {
     if (!session) return;
 
@@ -128,7 +127,6 @@ export default function QRScanner() {
     }
   };
 
-  const handleAssetScan = (asset: Asset) => {
   const handleAssetScan = async (asset: Asset) => {
     if (!session || !scannedUser) return;
 
