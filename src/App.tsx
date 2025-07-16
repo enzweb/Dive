@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import QRScanner from './components/QRScanner';
+import NFCScanner from './components/NFCScanner';
 import AssetList from './components/AssetList';
 import UserList from './components/UserList';
 import UserAssets from './components/UserAssets';
@@ -19,6 +20,8 @@ function App() {
         return <Dashboard />;
       case 'scanner':
         return <QRScanner />;
+      case 'nfc':
+        return <NFCScanner />;
       case 'assets':
         return <AssetList />;
       case 'users':

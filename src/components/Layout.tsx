@@ -11,6 +11,7 @@ import {
   AlertTriangle,
   CheckCircle,
   QrCode,
+  Smartphone,
   UserCheck
 } from 'lucide-react';
 import { mockNotifications } from '../data/mockData';

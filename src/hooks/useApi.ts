@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { apiService } from '../services/ApiService';
+import { localApiService } from '../services/LocalApiService';
 import { User, Asset, Movement, DashboardStats } from '../types';
 
 export function useUsers() {
@@ -11,7 +11,7 @@ export function useUsers() {
     try {
       setLoading(true);
       setError(null);
-      const data = await apiService.getUsers(search);
+      const data = await localApiService.getUsers(search);
       setUsers(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
@@ -26,7 +26,7 @@ export function useUsers() {
 
   const createUser = async (user: Omit<User, 'createdAt'>) => {
     try {
-      await apiService.createUser(user);
+      await localApiService.createUser(user);
       await loadUsers(); // Recharger la liste
     } catch (err) {
       throw err;
@@ -35,7 +35,7 @@ export function useUsers() {
 
   const updateUser = async (id: string, updates: Partial<User>) => {
     try {
-      await apiService.updateUser(id, updates);
+      await localApiService.updateUser(id, updates);
       await loadUsers(); // Recharger la liste
     } catch (err) {
       throw err;
@@ -44,7 +44,7 @@ export function useUsers() {
 
   const deleteUser = async (id: string) => {
     try {
-      await apiService.deleteUser(id);
+      await localApiService.deleteUser(id);
       await loadUsers(); // Recharger la liste
     } catch (err) {
       throw err;
@@ -72,7 +72,7 @@ export function useAssets() {
     try {
       setLoading(true);
       setError(null);
-      const data = await apiService.getAssets(search, status, category);
+      const data = await localApiService.getAssets(search, status, category);
       setAssets(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
@@ -87,7 +87,7 @@ export function useAssets() {
 
   const createAsset = async (asset: Omit<Asset, 'createdAt' | 'updatedAt'>) => {
     try {
-      await apiService.createAsset(asset);
+      await localApiService.createAsset(asset);
       await loadAssets(); // Recharger la liste
     } catch (err) {
       throw err;
@@ -96,7 +96,7 @@ export function useAssets() {
 
   const updateAsset = async (id: string, updates: Partial<Asset>) => {
     try {
-      await apiService.updateAsset(id, updates);
+      await localApiService.updateAsset(id, updates);
       await loadAssets(); // Recharger la liste
     } catch (err) {
       throw err;
@@ -123,7 +123,7 @@ export function useMovements() {
     try {
       setLoading(true);
       setError(null);
-      const data = await apiService.getMovements(search, type, limit);
+      const data = await localApiService.getMovements(search, type, limit);
       setMovements(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
@@ -154,7 +154,7 @@ export function useDashboard() {
     try {
       setLoading(true);
       setError(null);
-      const data = await apiService.getStats();
+      const data = await localApiService.getStats();
       setStats(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
@@ -178,7 +178,7 @@ export function useQRScanner() {
     try {
       setLoading(true);
       setError(null);
-      return await apiService.getUserByQrCode(qrCode);
+      return await localApiService.getUserByQrCode(qrCode);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Utilisateur non trouvé');
       throw err;
@@ -191,7 +191,7 @@ export function useQRScanner() {
     try {
       setLoading(true);
       setError(null);
-      return await apiService.getAssetByQrCode(qrCode);
+      return await localApiService.getAssetByQrCode(qrCode);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Équipement non trouvé');
       throw err;
@@ -209,7 +209,7 @@ export function useQRScanner() {
     try {
       setLoading(true);
       setError(null);
-      return await apiService.checkout(data);
+      return await localApiService.checkout(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors du checkout');
       throw err;
@@ -229,7 +229,7 @@ export function useQRScanner() {
     try {
       setLoading(true);
       setError(null);
-      return await apiService.checkin(data);
+      return await localApiService.checkin(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors du checkin');
       throw err;

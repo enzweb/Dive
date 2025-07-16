@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   QrCode, 
+  Smartphone,
   User, 
   Package, 
   CheckCircle, 
@@ -13,6 +14,7 @@ import { CheckoutSession } from '../types';
 import { useQRScanner, useUsers, useAssets } from '../hooks/useSupabase';
 import type { Database } from '../lib/supabase';
 import { mockUsers, mockAssets } from '../data/mockData';
+import NFCScanner from './NFCScanner';
 
 type User = Database['public']['Tables']['users']['Row'];
 type Asset = Database['public']['Tables']['assets']['Row'] & { assignedTo?: string | null };
@@ -25,6 +27,7 @@ export default function QRScanner() {
   const [scannedAssets, setScannedAssets] = useState<Asset[]>([]);
   const [manualInput, setManualInput] = useState('');
   const [showManualInput, setShowManualInput] = useState(false);
+  const [scanMode, setScanMode] = useState<'qr' | 'nfc'>('qr');
   const [message, setMessage] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
 
   // Gestion des paramètres URL pour les QR codes
@@ -207,15 +210,41 @@ export default function QRScanner() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-gray-900">Scanner QR Code</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Scanner QR Code & NFC</h1>
         {!session && (
-          <button
-            onClick={startNewSession}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-          >
-            <QrCode className="h-4 w-4 mr-2" />
-            Nouvelle Session
-          </button>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <button
+                onClick={() => setScanMode('qr')}
+                className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  scanMode === 'qr'
+                    ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                    : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                }`}
+              >
+                <QrCode className="h-4 w-4 mr-1" />
+                QR Code
+              </button>
+              <button
+                onClick={() => setScanMode('nfc')}
+                className={`inline-flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  scanMode === 'nfc'
+                    ? 'bg-blue-100 text-blue-700 border border-blue-300'
+                    : 'bg-gray-100 text-gray-700 border border-gray-300 hover:bg-gray-200'
+                }`}
+              >
+                <Smartphone className="h-4 w-4 mr-1" />
+                NFC
+              </button>
+            </div>
+            <button
+              onClick={startNewSession}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+            >
+              <QrCode className="h-4 w-4 mr-2" />
+              Nouvelle Session
+            </button>
+          </div>
         )}
       </div>
 
@@ -242,6 +271,34 @@ export default function QRScanner() {
       {/* Interface de scan */}
       {session ? (
         <div className="space-y-6">
+          {/* Mode de scan */}
+          <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+            <div className="flex items-center justify-center space-x-4">
+              <button
+                onClick={() => setScanMode('qr')}
+                className={`flex items-center px-4 py-2 rounded-md transition-colors ${
+                  scanMode === 'qr'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <QrCode className="h-5 w-5 mr-2" />
+                QR Code
+              </button>
+              <button
+                onClick={() => setScanMode('nfc')}
+                className={`flex items-center px-4 py-2 rounded-md transition-colors ${
+                  scanMode === 'nfc'
+                    ? 'bg-blue-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                <Smartphone className="h-5 w-5 mr-2" />
+                NFC
+              </button>
+            </div>
+          </div>
+
           {/* Utilisateur scanné */}
           {scannedUser && (
             <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
@@ -265,53 +322,59 @@ export default function QRScanner() {
             </div>
           )}
 
-          {/* Zone de scan optimisée mobile */}
-          <div className="bg-white p-4 sm:p-8 rounded-lg shadow-sm border border-gray-200">
-            <div className="text-center">
-              <div className="mx-auto h-16 w-16 sm:h-24 sm:w-24 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-                <Camera className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
-                {session.status === 'scanning_user' ? 'Scanner l\'utilisateur' : 'Scanner l\'équipement'}
-              </h3>
-              <p className="text-sm text-gray-500 mb-6">
-                {session.status === 'scanning_user' 
-                  ? 'Positionnez le QR code de l\'utilisateur devant la caméra'
-                  : 'Scannez les QR codes des équipements à emprunter ou retourner'
-                }
-              </p>
-              
-              {/* Interface mobile optimisée */}
-              <div className="space-y-4">
-                <button
-                  onClick={() => setShowManualInput(!showManualInput)}
-                  className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
-                >
-                  <Scan className="h-5 w-5 mr-2" />
-                  Saisie manuelle
-                </button>
+          {/* Zone de scan selon le mode */}
+          {scanMode === 'qr' ? (
+            /* Zone de scan QR Code */
+            <div className="bg-white p-4 sm:p-8 rounded-lg shadow-sm border border-gray-200">
+              <div className="text-center">
+                <div className="mx-auto h-16 w-16 sm:h-24 sm:w-24 rounded-full bg-gray-100 flex items-center justify-center mb-4">
+                  <Camera className="h-8 w-8 sm:h-12 sm:w-12 text-gray-400" />
+                </div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {session.status === 'scanning_user' ? 'Scanner l\'utilisateur' : 'Scanner l\'équipement'}
+                </h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  {session.status === 'scanning_user' 
+                    ? 'Positionnez le QR code de l\'utilisateur devant la caméra'
+                    : 'Scannez les QR codes des équipements à emprunter ou retourner'
+                  }
+                </p>
                 
-                {showManualInput && (
-                  <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 max-w-md mx-auto">
-                    <input
-                      type="text"
-                      value={manualInput}
-                      onChange={(e) => setManualInput(e.target.value)}
-                      placeholder="Code QR ou ID"
-                      className="flex-1 border border-gray-300 rounded-md px-4 py-3 text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      onKeyPress={(e) => e.key === 'Enter' && handleManualInput()}
-                    />
-                    <button
-                      onClick={handleManualInput}
-                      className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-base font-medium"
-                    >
-                      Valider
-                    </button>
-                  </div>
-                )}
+                {/* Interface mobile optimisée */}
+                <div className="space-y-4">
+                  <button
+                    onClick={() => setShowManualInput(!showManualInput)}
+                    className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  >
+                    <Scan className="h-5 w-5 mr-2" />
+                    Saisie manuelle
+                  </button>
+                  
+                  {showManualInput && (
+                    <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 max-w-md mx-auto">
+                      <input
+                        type="text"
+                        value={manualInput}
+                        onChange={(e) => setManualInput(e.target.value)}
+                        placeholder="Code QR ou ID"
+                        className="flex-1 border border-gray-300 rounded-md px-4 py-3 text-base focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        onKeyPress={(e) => e.key === 'Enter' && handleManualInput()}
+                      />
+                      <button
+                        onClick={handleManualInput}
+                        className="px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors text-base font-medium"
+                      >
+                        Valider
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          ) : (
+            /* Zone de scan NFC */
+            <NFCScanner />
+          )}
 
           {/* Équipements scannés */}
           {scannedAssets.length > 0 && (
@@ -372,16 +435,28 @@ export default function QRScanner() {
       ) : (
         /* État initial */
         <div className="text-center py-12">
-          <QrCode className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Scanner QR Code</h3>
+          <div className="flex justify-center mb-4">
+            {scanMode === 'qr' ? (
+              <QrCode className="h-12 w-12 text-gray-400" />
+            ) : (
+              <Smartphone className="h-12 w-12 text-gray-400" />
+            )}
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">
+            Scanner {scanMode === 'qr' ? 'QR Code' : 'NFC'}
+          </h3>
           <p className="text-sm text-gray-500 mb-6">
-            Démarrez une nouvelle session pour scanner les utilisateurs et équipements
+            Démarrez une nouvelle session pour scanner les utilisateurs et équipements via {scanMode === 'qr' ? 'QR Code' : 'NFC'}
           </p>
           <button
             onClick={startNewSession}
             className="w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
           >
-            <QrCode className="h-5 w-5 mr-2" />
+            {scanMode === 'qr' ? (
+              <QrCode className="h-5 w-5 mr-2" />
+            ) : (
+              <Smartphone className="h-5 w-5 mr-2" />
+            )}
             Commencer
           </button>
         </div>
@@ -414,6 +489,16 @@ export default function QRScanner() {
               ))
             )}
           </div>
+          {scanMode === 'nfc' && (
+            <div className="bg-yellow-50 p-4 rounded-lg">
+              <h4 className="text-sm font-medium text-yellow-900 mb-3">Mode NFC :</h4>
+              <div className="text-sm text-yellow-800">
+                <p>• Activez NFC sur votre appareil</p>
+                <p>• Approchez les tags NFC programmés</p>
+                <p>• Compatible avec Chrome Android</p>
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>
