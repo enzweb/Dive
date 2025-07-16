@@ -3,21 +3,24 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
+let supabase: any;
+
 if (!supabaseUrl || !supabaseAnonKey || supabaseUrl === 'your-project-url.supabase.co' || supabaseAnonKey === 'your-anon-key') {
   console.warn('Variables d\'environnement Supabase manquantes ou non configurées. Utilisation des données de démonstration.');
   // Create a dummy client to prevent errors
-  export const supabase = {
+  supabase = {
     from: () => ({
       select: () => ({ data: [], error: null }),
       insert: () => ({ data: null, error: new Error('Supabase non configuré') }),
       update: () => ({ data: null, error: new Error('Supabase non configuré') }),
       delete: () => ({ error: new Error('Supabase non configuré') })
     })
-  } as any;
+  };
 } else {
-  export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+  supabase = createClient(supabaseUrl, supabaseAnonKey);
 }
 
+export { supabase };
 
 // Types générés automatiquement par Supabase
 export type Database = {
