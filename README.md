@@ -1,22 +1,21 @@
-# DiveManager - Système de Gestion de Matériel de Plongée avec Supabase
+# DiveManager - Système de Gestion de Matériel de Plongée Auto-hébergé
 
 ## 🏊‍♂️ Description
 
-DiveManager est un système complet de gestion de matériel de plongée avec scanner QR code intégré et base de données Supabase, conçu spécialement pour les clubs de plongée.
+DiveManager est un système complet de gestion de matériel de plongée avec scanner QR code et NFC intégré, auto-hébergé avec base de données SQLite, conçu spécialement pour les clubs de plongée.
 
 ## ✨ Fonctionnalités
 
-- **Architecture Moderne** : Frontend React + Supabase Backend
-- **Base de données PostgreSQL** : Via Supabase, robuste et scalable
-- **API REST automatique** : Générée par Supabase
-- **Authentification intégrée** : Système d'auth Supabase
-- **Scanner QR Code** : Check-in/check-out automatique par scan
+- **Architecture Moderne** : Frontend React + Backend Node.js/Express
+- **Base de données SQLite** : Locale, robuste et performante
+- **API REST** : Backend Express avec endpoints complets
+- **Scanner QR Code & NFC** : Check-in/check-out automatique par scan ou NFC
 - **Gestion des utilisateurs** : Niveaux de certification FFESSM
 - **Suivi des équipements** : Détendeurs, combinaisons, masques, palmes, gilets, bouteilles
 - **Historique complet** : Tous les mouvements sont enregistrés
-- **Sauvegardes automatiques** : Gérées par Supabase
-- **Temps réel** : Synchronisation instantanée
+- **Sauvegardes automatiques** : Scripts de sauvegarde SQLite
 - **Interface responsive** : Optimisée pour mobile et tablette
+- **Support NFC** : Lecture de tags NFC sur navigateurs compatibles
 
 ## 🏗️ Architecture
 
@@ -24,22 +23,18 @@ DiveManager est un système complet de gestion de matériel de plongée avec sca
 DiveManager/
 ├── src/                   # Frontend React
 │   ├── components/        # Composants UI
-│   ├── lib/               # Configuration Supabase
-│   ├── services/          # Services Supabase
-│   └── hooks/             # Hooks React + Supabase
-├── supabase/
-│   └── migrations/        # Migrations SQL
+│   ├── services/          # Services API
+│   ├── utils/             # Utilitaires (NFC, QR)
+│   └── hooks/             # Hooks React
+├── server/                # Backend Node.js/Express
+│   ├── src/               # Code source serveur
+│   ├── database/          # Gestion base de données
+│   └── routes/            # Routes API
 ├── dist/                  # Build du frontend
 └── deployment/            # Scripts de déploiement
 ```
 
-## 🚀 Installation Rapide sur Debian/Raspberry Pi
-
-### 1. Prérequis Supabase
-
-1. **Créez un compte** sur [supabase.com](https://supabase.com)
-2. **Créez un nouveau projet**
-3. **Notez vos clés** : URL du projet + clé anonyme
+## 🚀 Installation sur Debian/Raspberry Pi
 
 ### 2. Installation Automatique
 
@@ -49,40 +44,34 @@ git clone https://github.com/enzweb/Dive.git
 cd Dive
 
 # Installation automatique
-sudo bash deployment/install-supabase.sh votre-domaine.com
+sudo bash deployment/install-fullstack.sh votre-domaine.com
 ```
 
-### 3. Configuration Supabase
+### 3. Configuration
 
 ```bash
 # Copier le fichier de configuration
 cp .env.example .env
 
-# Éditer avec vos clés Supabase
+# Éditer avec votre configuration
 nano .env
 ```
 
 **Contenu du fichier `.env` :**
 ```env
-VITE_SUPABASE_URL=https://votre-projet.supabase.co
-VITE_SUPABASE_ANON_KEY=votre-cle-anonyme
+VITE_API_URL=http://localhost:3001/api
 VITE_APP_TITLE=DiveManager
 ```
 
-### 4. Migration de la Base de Données
-
-1. **Ouvrez votre projet Supabase**
-2. **Allez dans SQL Editor**
-3. **Exécutez le contenu** du fichier `supabase/migrations/20250705134321_bold_sound.sql`
-
-### 5. Finalisation
+### 4. Déploiement
 
 ```bash
-# Rebuild avec la configuration
-npm run build
+# Déployer l'application complète
+sudo bash deployment/deploy-fullstack.sh votre-domaine.com
 
-# Redémarrer Nginx
-sudo systemctl reload nginx
+# Vérifier le statut
+pm2 status
+systemctl status nginx
 ```
 
 ### 6. Vérification
@@ -104,90 +93,123 @@ npm install
 npm run dev  # Démarre sur le port 5173
 ```
 
+### Backend
+
+```bash
+cd server
+npm install
+npm run dev  # Démarre sur le port 3001
+```
+
 ### Variables d'Environnement
 
 **Fichier `.env` :**
 ```env
-VITE_SUPABASE_URL=https://votre-projet.supabase.co
-VITE_SUPABASE_ANON_KEY=votre-cle-anonyme
+VITE_API_URL=http://localhost:3001/api
 VITE_APP_TITLE=DiveManager
 ```
 
-## 📡 API Supabase
+## 📡 API Backend
 
-### Accès Direct aux Tables
+### Endpoints Disponibles
  
 ```javascript
-// Récupérer tous les utilisateurs
-const { data: users } = await supabase
-  .from('users')
-  .select('*');
+// Utilisateurs
+GET    /api/users
+POST   /api/users
+PUT    /api/users/:id
+DELETE /api/users/:id
 
-// Créer un équipement
-const { data: asset } = await supabase
-  .from('assets')
-  .insert({
-    name: 'Détendeur Scubapro',
-    category: 'Détendeurs',
-    qr_code: 'DET-001'
-  });
+// Équipements
+GET    /api/assets
+POST   /api/assets
+PUT    /api/assets/:id
+
+// QR Code & NFC
+GET    /api/qr/user/:code
+GET    /api/qr/asset/:code
+GET    /api/nfc/user/:nfcId
+GET    /api/nfc/asset/:nfcId
+
+// Mouvements
+POST   /api/checkout
+POST   /api/checkin
+GET    /api/movements
 ```
 
-### Service Intégré
+## 🗄️ Base de Données SQLite
+
+### Avantages SQLite
+
+- **Locale** : Pas de dépendance cloud
+- **Performante** : Optimisée pour les applications locales
+- **Fiable** : Base de données éprouvée
+- **Portable** : Un seul fichier de base
+- **Sauvegardes simples** : Copie de fichier
+
+## 📱 Support NFC
+
+### Fonctionnalités NFC
+
+- **Lecture de tags** : Compatible avec les tags NFC programmés
+- **Support navigateur** : Chrome Android, Samsung Internet
+- **Programmation de tags** : Écriture de données sur les tags
+- **Fallback QR** : Compatibilité avec les QR codes existants
+
+### Utilisation NFC
 
 ```javascript
-import { supabaseService } from './src/services/supabaseService';
+import { nfcReader } from './src/utils/nfcReader';
 
-// Checkout d'un équipement
-await supabaseService.checkout({
-  assetId: 'asset-123',
-  userId: 'user-456',
-  performedBy: 'Admin'
-});
+// Démarrer la lecture NFC
+await nfcReader.startReading(
+  (result) => console.log('Tag lu:', result),
+  (error) => console.error('Erreur:', error)
+);
+
+// Programmer un tag
+await nfcReader.writeNFC(
+  'USER-001',
+  () => console.log('Tag programmé'),
+  (error) => console.error('Erreur:', error)
+);
 ```
 
-## 🗄️ Base de Données PostgreSQL (Supabase)
+### Navigateurs Compatibles NFC
 
-### Avantages de Supabase
+- **Chrome Android** : Support complet
+- **Samsung Internet** : Support complet  
+- **Edge Mobile** : Support partiel
+- **Firefox** : En développement
 
-- **PostgreSQL** : Base de données robuste et performante
-- **API REST automatique** : Pas besoin de coder l'API
-- **Interface d'administration** : Dashboard web intégré
-- **Sauvegardes automatiques** : Point-in-time recovery
-- **Authentification** : Système d'auth complet
-- **Temps réel** : WebSockets intégrés
-- **Scalabilité** : Croît avec vos besoins
+## 📱 Workflow QR Code & NFC
 
-### Structure
+1. **Générer les codes** : Via l'interface d'administration
+2. **Programmer les tags NFC** : Fonction d'écriture intégrée
+3. **Imprimer les étiquettes** : QR codes + tags NFC
+4. **Scanner utilisateur** : QR ou NFC
+5. **Scanner équipements** : QR ou NFC
+6. **Synchronisation** : Mise à jour base locale
+7. **Historique complet** : Tout est tracé
 
-- **users** : Utilisateurs et leurs certifications
-- **assets** : Équipements de plongée
-- **movements** : Historique des check-in/check-out
-- **issues** : Problèmes signalés
-- **notifications** : Alertes système
+## 🔧 Scripts de Gestion
 
-## 🔄 Gestion des Données
+### Sauvegarde
 
-### Sauvegardes Automatiques
- 
-- **Point-in-time recovery** : Restauration à n'importe quel moment
-- **Sauvegardes quotidiennes** : Automatiques via Supabase
-- **Réplication** : Données répliquées automatiquement
+```bash
+# Sauvegarde manuelle
+cd server && npm run backup
 
-### Export/Import
+# Sauvegarde automatique (cron)
+0 2 * * * cd /var/www/divemanager/server && npm run backup
+```
 
-- **Export CSV** : Via l'interface Supabase
-- **API REST** : Pour intégrations externes
-- **SQL direct** : Accès complet à PostgreSQL
+### Restauration
 
-## 📱 Workflow QR Code
-
-1. **Générer les QR codes** : Via l'interface d'administration
-2. **Imprimer les étiquettes** : Fonction d'impression intégrée
-3. **Scanner utilisateur** : Premier scan obligatoire
-4. **Scanner équipements** : Autant que nécessaire
-5. **Synchronisation temps réel** : Mise à jour instantanée
-6. **Historique complet** : Tout est tracé automatiquement
+```bash
+# Restaurer depuis une sauvegarde
+cd server && npm run restore backups/divemanager-backup-2024-01-15.db
+```
 
 ## 🔒 Sécurité et Production
 
@@ -209,19 +231,6 @@ sudo ufw allow 443/tcp
 sudo ufw enable
 ```
 
-### Sécurité Supabase
- 
-- **Row Level Security (RLS)** : Sécurité au niveau des lignes
-- **Authentification JWT** : Tokens sécurisés
-- **HTTPS obligatoire** : Chiffrement des communications
-- **Audit logs** : Traçabilité complète
-
-### Monitoring
-
-- **Dashboard Supabase** : Métriques en temps réel
-- **Logs d'API** : Toutes les requêtes tracées
-- **Alertes** : Notifications automatiques
-
 ## 🛠️ Maintenance
 
 ### Mise à jour
@@ -232,38 +241,33 @@ cd /var/www/divemanager
 # Mettre à jour le code
 git pull origin main
 
-# Installer les nouvelles dépendances
+# Mettre à jour les dépendances
 npm install
+cd server && npm install
 
-# Rebuilder
+# Rebuilder et redémarrer
 npm run build
-
-# Redémarrer Nginx
-sudo systemctl reload nginx
+pm2 restart divemanager-server
+systemctl reload nginx
 ```
 
-### Migrations Supabase
- 
-1. **Nouvelles migrations** dans `supabase/migrations/`
-2. **Exécution via SQL Editor** dans Supabase
-3. **Pas de downtime** : Migrations en ligne
+## 🎯 Points Clés de l'Architecture Locale
 
-## 🎯 Points Clés de l'Architecture Supabase
+✅ **Auto-hébergé** : Contrôle total de vos données  
+✅ **SQLite** : Base de données locale performante  
+✅ **QR Code + NFC** : Double technologie de scan  
+✅ **API REST** : Backend Express robuste  
+✅ **Sauvegardes** : Scripts automatisés  
+✅ **Mobile-first** : Interface optimisée  
+✅ **Installation simple** : Scripts Debian inclus  
+✅ **Pas de cloud** : Fonctionne hors ligne  
 
-✅ **Simplicité** : Plus de serveur backend à gérer  
-✅ **Scalabilité** : PostgreSQL + infrastructure cloud  
-✅ **Temps réel** : Synchronisation instantanée  
-✅ **Sécurité** : RLS + authentification intégrée  
-✅ **Monitoring** : Dashboard et métriques inclus  
-✅ **Sauvegardes** : Automatiques et fiables  
-✅ **API REST** : Générée automatiquement  
-✅ **Installation simple** : Un seul script sur Debian  
+## 💡 Technologies NFC
 
-## 💰 Coûts Supabase
+- **Web NFC API** : Standard W3C pour navigateurs
+- **NDEF** : Format de données NFC
+- **Tags compatibles** : NTAG213, NTAG215, NTAG216
+- **Portée** : 4cm maximum
+- **Vitesse** : Lecture instantanée
 
-- **Gratuit jusqu'à 50 000 requêtes/mois**
-- **2 Go de stockage inclus**
-- **Parfait pour un club de plongée**
-- **Upgrade possible si nécessaire**
-
-L'application est maintenant **prête pour la production** avec Supabase ! 🚀
+L'application est maintenant **100% auto-hébergée** avec support QR Code et NFC ! 🚀
