@@ -9,16 +9,20 @@ import {
   Calendar,
   User
 } from 'lucide-react';
-import { useMovements } from '../hooks/useSupabase';
+import { mockMovements } from '../data/mockData';
 
 export default function History() {
-  const { movements, loading, searchMovements } = useMovements();
+  const [movements, setMovements] = useState(mockMovements);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState<string>('all');
 
-  useEffect(() => {
-    searchMovements(searchTerm, typeFilter);
-  }, [searchTerm, typeFilter]);
+  const filteredMovements = movements.filter(movement => {
+    const matchesSearch = movement.assetName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         movement.userName.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = typeFilter === 'all' || movement.type === typeFilter;
+    return matchesSearch && matchesType;
+  });
 
   const getMovementIcon = (type: string) => {
     switch (type) {
@@ -142,9 +146,9 @@ export default function History() {
         </div>
         <div className="p-6">
           <div className="space-y-6">
-            {movements.map((movement, index) => (
+            {filteredMovements.map((movement, index) => (
               <div key={movement.id} className="relative">
-                {index < movements.length - 1 && (
+                {index < filteredMovements.length - 1 && (
                   <div className="absolute left-5 top-10 bottom-0 w-0.5 bg-gray-200" />
                 )}
                 <div className="flex items-start space-x-4">
@@ -185,7 +189,7 @@ export default function History() {
           </div>
         </div>
         
-        {movements.length === 0 && (
+        {filteredMovements.length === 0 && (
           <div className="text-center py-12">
             <Package className="mx-auto h-12 w-12 text-gray-400" />
             <h3 className="mt-2 text-sm font-medium text-gray-900">Aucun mouvement trouvé</h3>
@@ -199,7 +203,7 @@ export default function History() {
       {/* Summary */}
       <div className="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
         <div className="text-sm text-gray-600">
-          Total: {movements.length} mouvement(s)
+          Total: {filteredMovements.length} mouvement(s)
         </div>
       </div>
     </div>

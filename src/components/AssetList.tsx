@@ -14,20 +14,26 @@ import {
   QrCode
 } from 'lucide-react';
 import { Asset } from '../types';
-import { useAssets } from '../hooks/useSupabase';
+import { mockAssets } from '../data/mockData';
 
 export default function AssetList() {
-  const { assets, loading, searchAssets } = useAssets();
+  const [assets, setAssets] = useState(mockAssets);
+  const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
 
-  useEffect(() => {
-    searchAssets(searchTerm, statusFilter, categoryFilter);
-  }, [searchTerm, statusFilter, categoryFilter]);
+  const filteredAssets = assets.filter(asset => {
+    const matchesSearch = asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         asset.assetTag.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         asset.serialNumber.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || asset.status === statusFilter;
+    const matchesCategory = categoryFilter === 'all' || asset.category === categoryFilter;
+    return matchesSearch && matchesStatus && matchesCategory;
+  });
 
-  const categories = [...new Set(assets.map(asset => asset.category))];
+  const categories = [...new Set(mockAssets.map(asset => asset.category))];
 
   const getStatusBadge = (status: string, hasIssues?: boolean) => {
     switch (status) {
@@ -174,7 +180,7 @@ export default function AssetList() {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {assets.map((asset) => (
+              {filteredAssets.map((asset) => (
                 <tr key={asset.id} className={`hover:bg-gray-50 transition-colors ${
                   asset.hasIssues ? 'bg-red-50 border-l-4 border-red-400' : ''
                 }`}>

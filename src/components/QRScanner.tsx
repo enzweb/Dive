@@ -11,17 +11,16 @@ import {
   Scan
 } from 'lucide-react';
 import { CheckoutSession } from '../types';
-import { useQRScanner, useUsers, useAssets } from '../hooks/useSupabase';
-import type { Database } from '../lib/supabase';
+import { useQRScanner } from '../hooks/useApi';
 import { mockUsers, mockAssets } from '../data/mockData';
 import NFCScanner from './NFCScanner';
 
-type User = Database['public']['Tables']['users']['Row'];
-type Asset = Database['public']['Tables']['assets']['Row'] & { assignedTo?: string | null };
+import { User, Asset } from '../types';
+
 export default function QRScanner() {
   const { scanUserQR, scanAssetQR, checkout, checkin } = useQRScanner();
-  const { users } = useUsers();
-  const { assets } = useAssets();
+  const users = mockUsers;
+  const assets = mockAssets;
   const [session, setSession] = useState<CheckoutSession | null>(null);
   const [scannedUser, setScannedUser] = useState<User | null>(null);
   const [scannedAssets, setScannedAssets] = useState<Asset[]>([]);

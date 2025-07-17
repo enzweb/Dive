@@ -11,18 +11,10 @@ import {
   Bell,
   UserCheck
 } from 'lucide-react';
-import { useDashboard } from '../hooks/useSupabase';
+import { mockDashboardStats } from '../data/mockData';
 
 export default function Dashboard() {
-  const { stats, loading } = useDashboard();
-
-  if (loading || !stats) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-      </div>
-    );
-  }
+  const stats = mockDashboardStats;
 
   const statusCards = [
     {

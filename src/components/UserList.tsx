@@ -9,11 +9,12 @@ import {
   Mail,
   Building
 } from 'lucide-react';
-import { useUsers, useAssets } from '../hooks/useSupabase';
+import { mockUsers, mockAssets } from '../data/mockData';
 
 export default function UserList() {
-  const { users, loading: usersLoading } = useUsers();
-  const { assets } = useAssets();
+  const users = mockUsers;
+  const assets = mockAssets;
+  const loading = false;
   const [searchTerm, setSearchTerm] = useState('');
 
   const filteredUsers = users.filter(user => 
@@ -29,7 +30,7 @@ export default function UserList() {
     return new Date(dateString).toLocaleDateString('fr-FR');
   };
 
-  if (usersLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>

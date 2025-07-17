@@ -8,11 +8,12 @@ import {
   CheckCircle,
   Eye
 } from 'lucide-react';
-import { useUsers, useAssets } from '../hooks/useSupabase';
+import { mockUsers, mockAssets } from '../data/mockData';
 
 export default function UserAssets() {
-  const { users, loading: usersLoading } = useUsers();
-  const { assets, loading: assetsLoading } = useAssets();
+  const users = mockUsers;
+  const assets = mockAssets;
+  const loading = false;
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedUser, setSelectedUser] = useState<any>(null);
 
@@ -60,7 +61,7 @@ export default function UserAssets() {
     }
   };
 
-  if (usersLoading || assetsLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
