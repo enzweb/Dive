@@ -1,119 +1,6 @@
 import { useState, useEffect } from 'react';
-import { mockUsers, mockAssets, mockMovements, mockDashboardStats } from '../data/mockData';
+import { apiService } from '../services/ApiService';
 import { User, Asset, Movement, DashboardStats } from '../types';
-
-// Service simulé pour les données locales
-const mockApiService = {
-  async getUsers(search?: string) {
-    await new Promise(resolve => setTimeout(resolve, 100)); // Simule un délai réseau
-    let users = mockUsers;
-    if (search) {
-      users = users.filter(user => 
-        user.name.toLowerCase().includes(search.toLowerCase()) ||
-        user.email.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-    return users;
-  },
-
-  async getAssets(search?: string, status?: string, category?: string) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    let assets = mockAssets;
-    if (search) {
-      assets = assets.filter(asset => 
-        asset.name.toLowerCase().includes(search.toLowerCase()) ||
-        asset.assetTag.toLowerCase().includes(search.toLowerCase()) ||
-        asset.serialNumber.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-    if (status && status !== 'all') {
-      assets = assets.filter(asset => asset.status === status);
-    }
-    if (category && category !== 'all') {
-      assets = assets.filter(asset => asset.category === category);
-    }
-    return assets;
-  },
-
-  async getMovements(search?: string, type?: string, limit?: number) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    let movements = mockMovements;
-    if (search) {
-      movements = movements.filter(movement => 
-        movement.assetName.toLowerCase().includes(search.toLowerCase()) ||
-        movement.userName.toLowerCase().includes(search.toLowerCase())
-      );
-    }
-    if (type && type !== 'all') {
-      movements = movements.filter(movement => movement.type === type);
-    }
-    if (limit) {
-      movements = movements.slice(0, limit);
-    }
-    return movements;
-  },
-
-  async getStats() {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    return mockDashboardStats;
-  },
-
-  async getUserByQrCode(qrCode: string) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    const user = mockUsers.find(u => u.qrCode === qrCode);
-    if (!user) throw new Error('Utilisateur non trouvé');
-    return user;
-  },
-
-  async getAssetByQrCode(qrCode: string) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    const asset = mockAssets.find(a => a.qrCode === qrCode);
-    if (!asset) throw new Error('Équipement non trouvé');
-    return asset;
-  },
-
-  async checkout(data: any) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    console.log('Checkout simulé:', data);
-    return { success: true };
-  },
-
-  async checkin(data: any) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    console.log('Checkin simulé:', data);
-    return { success: true };
-  },
-
-  async createUser(user: any) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    console.log('Création utilisateur simulée:', user);
-    return { success: true };
-  },
-
-  async updateUser(id: string, updates: any) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    console.log('Mise à jour utilisateur simulée:', id, updates);
-    return { success: true };
-  },
-
-  async deleteUser(id: string) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    console.log('Suppression utilisateur simulée:', id);
-    return { success: true };
-  },
-
-  async createAsset(asset: any) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    console.log('Création équipement simulée:', asset);
-    return { success: true };
-  },
-
-  async updateAsset(id: string, updates: any) {
-    await new Promise(resolve => setTimeout(resolve, 100));
-    console.log('Mise à jour équipement simulée:', id, updates);
-    return { success: true };
-  }
-};
 export function useUsers() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -123,7 +10,7 @@ export function useUsers() {
     try {
       setLoading(true);
       setError(null);
-      const data = await mockApiService.getUsers(search);
+      const data = await apiService.getUsers(search);
       setUsers(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
@@ -138,7 +25,7 @@ export function useUsers() {
 
   const createUser = async (user: Omit<User, 'createdAt'>) => {
     try {
-      await mockApiService.createUser(user);
+      await apiService.createUser(user);
       await loadUsers(); // Recharger la liste
     } catch (err) {
       throw err;
@@ -147,7 +34,7 @@ export function useUsers() {
 
   const updateUser = async (id: string, updates: Partial<User>) => {
     try {
-      await mockApiService.updateUser(id, updates);
+      await apiService.updateUser(id, updates);
       await loadUsers(); // Recharger la liste
     } catch (err) {
       throw err;
@@ -156,7 +43,7 @@ export function useUsers() {
 
   const deleteUser = async (id: string) => {
     try {
-      await mockApiService.deleteUser(id);
+      await apiService.deleteUser(id);
       await loadUsers(); // Recharger la liste
     } catch (err) {
       throw err;
@@ -184,7 +71,7 @@ export function useAssets() {
     try {
       setLoading(true);
       setError(null);
-      const data = await mockApiService.getAssets(search, status, category);
+      const data = await apiService.getAssets(search, status, category);
       setAssets(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
@@ -199,7 +86,7 @@ export function useAssets() {
 
   const createAsset = async (asset: Omit<Asset, 'createdAt' | 'updatedAt'>) => {
     try {
-      await mockApiService.createAsset(asset);
+      await apiService.createAsset(asset);
       await loadAssets(); // Recharger la liste
     } catch (err) {
       throw err;
@@ -208,7 +95,7 @@ export function useAssets() {
 
   const updateAsset = async (id: string, updates: Partial<Asset>) => {
     try {
-      await mockApiService.updateAsset(id, updates);
+      await apiService.updateAsset(id, updates);
       await loadAssets(); // Recharger la liste
     } catch (err) {
       throw err;
@@ -235,7 +122,7 @@ export function useMovements() {
     try {
       setLoading(true);
       setError(null);
-      const data = await mockApiService.getMovements(search, type, limit);
+      const data = await apiService.getMovements(search, type, limit);
       setMovements(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
@@ -266,7 +153,7 @@ export function useDashboard() {
     try {
       setLoading(true);
       setError(null);
-      const data = await mockApiService.getStats();
+      const data = await apiService.getStats();
       setStats(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors du chargement');
@@ -290,7 +177,7 @@ export function useQRScanner() {
     try {
       setLoading(true);
       setError(null);
-      return await mockApiService.getUserByQrCode(qrCode);
+      return await apiService.getUserByQrCode(qrCode);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Utilisateur non trouvé');
       throw err;
@@ -303,7 +190,7 @@ export function useQRScanner() {
     try {
       setLoading(true);
       setError(null);
-      return await mockApiService.getAssetByQrCode(qrCode);
+      return await apiService.getAssetByQrCode(qrCode);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Équipement non trouvé');
       throw err;
@@ -321,7 +208,7 @@ export function useQRScanner() {
     try {
       setLoading(true);
       setError(null);
-      return await mockApiService.checkout(data);
+      return await apiService.checkout(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors du checkout');
       throw err;
@@ -341,7 +228,7 @@ export function useQRScanner() {
     try {
       setLoading(true);
       setError(null);
-      return await mockApiService.checkin(data);
+      return await apiService.checkin(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Erreur lors du checkin');
       throw err;

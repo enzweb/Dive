@@ -23,8 +23,9 @@ export default function UserAssets() {
     user.licenseNumber?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Cette fonction devra être adaptée avec l'API
   const getUserAssets = (userName: string) => {
-    return assets.filter(asset => asset.assignedTo === userName);
+    return assets.filter(asset => asset.assigned_to_name === userName);
   };
 
   const formatDate = (dateString: string) => {

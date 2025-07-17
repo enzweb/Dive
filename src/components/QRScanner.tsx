@@ -105,15 +105,13 @@ export default function QRScanner() {
       // Recherche de l'utilisateur
       try {
         const user = await scanUserQR(qrCode);
-        if (user) {
-          if (!user.is_active) {
-            setMessage({ type: 'error', text: 'Utilisateur inactif' });
-            return;
-          }
-          setScannedUser(user);
-          setSession({ ...session, userId: user.id, userName: user.name, status: 'scanning_equipment' });
-          setMessage({ type: 'success', text: `Utilisateur: ${user.name} - Scannez maintenant les équipements` });
+        if (!user.is_active) {
+          setMessage({ type: 'error', text: 'Utilisateur inactif' });
+          return;
         }
+        setScannedUser(user);
+        setSession({ ...session, userId: user.id, userName: user.name, status: 'scanning_equipment' });
+        setMessage({ type: 'success', text: `Utilisateur: ${user.name} - Scannez maintenant les équipements` });
       } catch (error) {
         setMessage({ type: 'error', text: 'Utilisateur non trouvé' });
       }
@@ -148,13 +146,13 @@ export default function QRScanner() {
           userId: scannedUser.id,
           performedBy: 'Scanner QR'
         });
-        const updatedAsset = { ...asset, status: 'checked_out' as const, assignedTo: scannedUser.name };
+        const updatedAsset = { ...asset, status: 'checked_out' as const, assigned_to_name: scannedUser.name };
         setScannedAssets([...scannedAssets, updatedAsset]);
         setMessage({ type: 'success', text: `${asset.name} - SORTIE enregistrée` });
       } catch (error) {
         setMessage({ type: 'error', text: 'Erreur lors de la sortie' });
       }
-    } else if (asset.status === 'checked_out' && asset.assignedTo === scannedUser.name) {
+    } else if (asset.status === 'checked_out' && asset.assigned_to_name === scannedUser.name) {
       // Check-in
       try {
         await checkin({
@@ -162,14 +160,14 @@ export default function QRScanner() {
           userId: scannedUser.id,
           performedBy: 'Scanner QR'
         });
-        const updatedAsset = { ...asset, status: 'available' as const, assignedTo: undefined };
+        const updatedAsset = { ...asset, status: 'available' as const, assigned_to_name: undefined };
         setScannedAssets([...scannedAssets, updatedAsset]);
         setMessage({ type: 'success', text: `${asset.name} - RETOUR enregistré` });
       } catch (error) {
         setMessage({ type: 'error', text: 'Erreur lors du retour' });
       }
-    } else if (asset.status === 'checked_out' && asset.assignedTo !== scannedUser.name) {
-      setMessage({ type: 'error', text: `Équipement assigné à ${asset.assignedTo}` });
+    } else if (asset.status === 'checked_out' && asset.assigned_to_name !== scannedUser.name) {
+      setMessage({ type: 'error', text: `Équipement assigné à ${asset.assigned_to_name}` });
     } else if (asset.status === 'defective') {
       setMessage({ type: 'error', text: 'Équipement défaillant - non disponible' });
     } else if (asset.status === 'maintenance') {
@@ -202,8 +200,10 @@ export default function QRScanner() {
     setMessage(null);
   };
 
+  // Cette fonction sera remplacée par un appel API si nécessaire
   const getUserAssets = (userName: string) => {
-    return assets.filter(asset => asset.assignedTo === userName);
+    // Pour l'instant, on retourne un tableau vide car on n'a pas cette info facilement
+    return [];
   };
 
   return (

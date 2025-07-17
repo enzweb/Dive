@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
 
 class ApiService {
   private async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
@@ -110,11 +110,11 @@ class ApiService {
   // === QR CODE ===
 
   async getUserByQrCode(qrCode: string) {
-    return this.request(`/qr/user/${qrCode}`);
+    return this.request(`/qr/user/${encodeURIComponent(qrCode)}`);
   }
 
   async getAssetByQrCode(qrCode: string) {
-    return this.request(`/qr/asset/${qrCode}`);
+    return this.request(`/qr/asset/${encodeURIComponent(qrCode)}`);
   }
 
   // === CHECKOUT/CHECKIN ===

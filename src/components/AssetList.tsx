@@ -212,7 +212,7 @@ export default function AssetList() {
                     {getStatusBadge(asset.status, asset.hasIssues)}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                    {asset.assignedTo || '-'}
+                    {asset.assigned_to_name || '-'}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                     {asset.location}

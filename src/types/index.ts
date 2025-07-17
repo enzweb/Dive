@@ -7,7 +7,7 @@ export interface Asset {
   model: string;
   manufacturer: string;
   status: 'available' | 'checked_out' | 'maintenance' | 'retired' | 'defective';
-  assignedTo?: string;
+  assigned_to_name?: string;
   location: string;
   notes?: string;
   hasIssues?: boolean;

@@ -23,7 +23,7 @@ export default function UserList() {
   );
 
   const getUserAssetCount = (userName: string) => {
-    return assets.filter(asset => asset.assignedTo === userName).length;
+    return assets.filter(asset => asset.assigned_to_name === userName).length;
   };
 
   const formatDate = (dateString: string) => {
