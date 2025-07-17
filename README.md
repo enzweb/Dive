@@ -1,14 +1,14 @@
-# DiveManager - Système de Gestion de Matériel de Plongée Auto-hébergé
+# DiveManager - Système Complet de Gestion de Matériel de Plongée
 
 ## 🏊‍♂️ Description
 
-DiveManager est un système complet de gestion de matériel de plongée avec scanner QR code et NFC intégré, auto-hébergé avec base de données SQLite, conçu spécialement pour les clubs de plongée.
+DiveManager est un système complet de gestion de matériel de plongée avec scanner QR code et NFC intégré, backend Node.js/Express, base de données SQLite locale, conçu spécialement pour les clubs de plongée.
 
 ## ✨ Fonctionnalités
 
-- **Architecture Moderne** : Frontend React + Backend Node.js/Express
-- **Base de données SQLite** : Locale, robuste et performante
-- **API REST** : Backend Express avec endpoints complets
+- **Architecture Complète** : Frontend React + Backend Node.js/Express + SQLite
+- **Base de données SQLite** : Locale, robuste, performante et persistante
+- **API REST Complète** : Backend Express avec tous les endpoints
 - **Scanner QR Code & NFC** : Check-in/check-out automatique par scan ou NFC
 - **Gestion des utilisateurs** : Niveaux de certification FFESSM
 - **Suivi des équipements** : Détendeurs, combinaisons, masques, palmes, gilets, bouteilles
@@ -16,6 +16,8 @@ DiveManager est un système complet de gestion de matériel de plongée avec sca
 - **Sauvegardes automatiques** : Scripts de sauvegarde SQLite
 - **Interface responsive** : Optimisée pour mobile et tablette
 - **Support NFC** : Lecture de tags NFC sur navigateurs compatibles
+- **Installation automatisée** : Scripts Debian inclus
+- **Production ready** : PM2, Nginx, SSL, sauvegardes
 
 ## 🏗️ Architecture
 
@@ -36,116 +38,310 @@ DiveManager/
 
 ## 🚀 Installation sur Debian/Raspberry Pi
 
-### 2. Installation Automatique
+### 1. Installation Rapide (Recommandée)
 
 ```bash
-# Cloner le projet
-git clone https://github.com/enzweb/Dive.git
-cd Dive
-
-# Installation automatique
-sudo bash deployment/install-fullstack.sh votre-domaine.com
+# Télécharger et installer en une commande
+curl -fsSL https://raw.githubusercontent.com/votre-repo/divemanager/main/deployment/install-complete.sh | sudo bash -s votre-domaine.com
 ```
 
-### 3. Configuration
+### 2. Installation Manuelle
 
 ```bash
-# Copier le fichier de configuration
-cp .env.example .env
+# 1. Installation des dépendances système
+sudo bash deployment/install-complete.sh votre-domaine.com
 
-# Éditer avec votre configuration
-nano .env
+# 2. Copier les fichiers de l'application dans /var/www/divemanager
+
+# 3. Installation des dépendances Node.js
+cd /var/www/divemanager
+npm install
+cd server && npm install && npm run build && cd ..
+npm run build
+
+# 4. Configuration production
+sudo bash deployment/configure-production.sh votre-domaine.com
 ```
 
-**Contenu du fichier `.env` :**
-```env
-VITE_API_URL=http://localhost:3001/api
-VITE_APP_TITLE=DiveManager
-```
-
-### 4. Déploiement
+### 3. Vérification de l'Installation
 
 ```bash
-# Déployer l'application complète
-sudo bash deployment/deploy-fullstack.sh votre-domaine.com
+# Vérifier le backend
+sudo -u divemanager pm2 status
 
-# Vérifier le statut
-pm2 status
+# Vérifier Nginx
 systemctl status nginx
+
+# Tester l'API
+curl http://votre-domaine.com/api/health
+
+# Voir les logs
+tail -f /var/log/divemanager/combined.log
 ```
 
-### 6. Vérification
+## 🗄️ Base de Données SQLite
+
+### Structure de la Base
+
+- **users** : Utilisateurs et leurs certifications
+- **assets** : Équipements de plongée
+- **movements** : Historique des sorties/retours
+- **issues** : Problèmes signalés
+- **notifications** : Alertes système
+
+### Gestion de la Base
 
 ```bash
-# Vérifier le frontend
-curl http://votre-domaine.com
+# Initialiser la base (fait automatiquement)
+cd /var/www/divemanager/server
+node scripts/init-db.js
 
-# Vérifier les logs Nginx
-sudo tail -f /var/log/nginx/access.log
+# Sauvegarde manuelle
+node scripts/backup-db.js
+
+# Restaurer une sauvegarde
+node scripts/restore-db.js backups/divemanager-backup-2024-01-15.db
+
+# Accès direct SQLite (debug)
+sqlite3 divemanager.db
+```
+
+## 📡 API Backend Complète
+
+### Endpoints Disponibles
+
+```javascript
+// === UTILISATEURS ===
+GET    /api/users              // Liste des utilisateurs
+POST   /api/users              // Créer un utilisateur
+PUT    /api/users/:id          // Modifier un utilisateur
+
+// === ÉQUIPEMENTS ===
+GET    /api/assets             // Liste des équipements
+POST   /api/assets             // Créer un équipement
+PUT    /api/assets/:id         // Modifier un équipement
+
+// === QR CODE & NFC ===
+GET    /api/qr/user/:code      // Recherche utilisateur par QR
+GET    /api/qr/asset/:code     // Recherche équipement par QR
+GET    /api/nfc/user/:nfcId    // Recherche utilisateur par NFC
+GET    /api/nfc/asset/:nfcId   // Recherche équipement par NFC
+
+// === MOUVEMENTS ===
+POST   /api/checkout           // Sortie d'équipement
+POST   /api/checkin            // Retour d'équipement
+GET    /api/movements          // Historique des mouvements
+
+// === STATISTIQUES ===
+GET    /api/stats              // Statistiques du tableau de bord
+
+// === SANTÉ ===
+GET    /api/health             // État du serveur et de la base
+```
+
+### Exemples d'Utilisation API
+
+```bash
+# Récupérer tous les utilisateurs
+curl http://localhost/api/users
+
+# Rechercher un équipement par QR code
+curl http://localhost/api/qr/asset/DET-001-QR
+
+# Effectuer un checkout
+curl -X POST http://localhost/api/checkout \
+  -H "Content-Type: application/json" \
+  -d '{"assetId":"1","userId":"1","performedBy":"Admin","notes":"Sortie plongée"}'
+
+# Statistiques
+curl http://localhost/api/stats
 ```
 
 ## 🔧 Développement Local
-
-### Installation
-
-```bash
-npm install
-npm run dev  # Démarre sur le port 5173
-```
 
 ### Backend
 
 ```bash
 cd server
 npm install
-npm run dev  # Démarre sur le port 3001
+npm run dev  # Démarre sur le port 3001 avec hot-reload
 ```
 
-### Variables d'Environnement
+### Frontend
 
-**Fichier `.env` :**
-```env
-VITE_API_URL=http://localhost:3001/api
-VITE_APP_TITLE=DiveManager
+```bash
+npm install
+npm run dev  # Démarre sur le port 3000
 ```
 
-## 📡 API Backend
+### Base de Données de Développement
 
-### Endpoints Disponibles
- 
-```javascript
-// Utilisateurs
-GET    /api/users
-POST   /api/users
-PUT    /api/users/:id
-DELETE /api/users/:id
-
-// Équipements
-GET    /api/assets
-POST   /api/assets
-PUT    /api/assets/:id
-
-// QR Code & NFC
-GET    /api/qr/user/:code
-GET    /api/qr/asset/:code
-GET    /api/nfc/user/:nfcId
-GET    /api/nfc/asset/:nfcId
-
-// Mouvements
-POST   /api/checkout
-POST   /api/checkin
-GET    /api/movements
+```bash
+# La base SQLite est créée automatiquement avec des données de démonstration
+# Fichier : server/divemanager.db
 ```
 
-## 🗄️ Base de Données SQLite
+## 🚀 Déploiement et Production
 
-### Avantages SQLite
+### Gestion avec PM2
 
-- **Locale** : Pas de dépendance cloud
-- **Performante** : Optimisée pour les applications locales
-- **Fiable** : Base de données éprouvée
-- **Portable** : Un seul fichier de base
-- **Sauvegardes simples** : Copie de fichier
+```bash
+# Statut des processus
+sudo -u divemanager pm2 status
+
+# Redémarrer l'application
+sudo -u divemanager pm2 restart divemanager-server
+
+# Voir les logs en temps réel
+sudo -u divemanager pm2 logs divemanager-server
+
+# Monitoring
+sudo -u divemanager pm2 monit
+```
+
+### Configuration Nginx
+
+Le serveur Nginx est configuré pour :
+- Servir le frontend React sur `/`
+- Proxifier l'API sur `/api/`
+- Gérer les routes QR codes `/user/:id` et `/asset/:id`
+- Optimisations (gzip, cache, sécurité)
+
+### Sauvegardes Automatiques
+
+```bash
+# Sauvegarde quotidienne à 2h du matin (configurée automatiquement)
+0 2 * * * cd /var/www/divemanager/server && node scripts/backup-db.js
+
+# Localisation des sauvegardes
+ls -la /var/www/divemanager/server/backups/
+```
+
+## 🔒 Sécurité et HTTPS
+
+### Installation SSL avec Certbot
+
+```bash
+# Installer Certbot
+sudo apt install certbot python3-certbot-nginx
+
+# Obtenir le certificat SSL
+sudo certbot --nginx -d votre-domaine.com
+
+# Renouvellement automatique (déjà configuré)
+sudo certbot renew --dry-run
+```
+
+### Firewall
+
+```bash
+# Configuration automatique lors de l'installation
+sudo ufw status
+```
+
+## 🛠️ Maintenance et Monitoring
+
+### Logs Système
+
+```bash
+# Logs de l'application
+tail -f /var/log/divemanager/combined.log
+
+# Logs Nginx
+tail -f /var/log/nginx/access.log
+tail -f /var/log/nginx/error.log
+
+# Logs système
+journalctl -u nginx -f
+```
+
+### Mise à jour de l'Application
+
+```bash
+# 1. Sauvegarder la base de données
+cd /var/www/divemanager/server
+sudo -u divemanager node scripts/backup-db.js
+
+# 2. Mettre à jour le code
+cd /var/www/divemanager
+git pull origin main
+
+# 3. Installer les nouvelles dépendances
+npm install
+cd server && npm install && npm run build && cd ..
+
+# 4. Rebuilder le frontend
+npm run build
+
+# 5. Redémarrer l'application
+sudo -u divemanager pm2 restart divemanager-server
+systemctl reload nginx
+```
+
+### Monitoring des Performances
+
+```bash
+# Utilisation des ressources
+sudo -u divemanager pm2 monit
+
+# Espace disque
+df -h
+
+# Taille de la base de données
+ls -lh /var/www/divemanager/server/divemanager.db
+```
+
+## 🎯 Points Clés de l'Architecture Complète
+
+✅ **Backend Complet** : API REST Node.js/Express avec SQLite  
+✅ **Frontend React** : Interface moderne et responsive  
+✅ **Base SQLite** : Persistance locale des données  
+✅ **QR Code + NFC** : Double technologie de scan  
+✅ **Installation automatisée** : Scripts Debian inclus  
+✅ **Production ready** : PM2, Nginx, SSL, monitoring  
+✅ **Sauvegardes** : Scripts automatisés  
+✅ **Sécurité** : Firewall, HTTPS, headers sécurisés  
+✅ **Maintenance** : Logs, monitoring, mise à jour  
+
+## 🆘 Dépannage
+
+### Problèmes Courants
+
+**Backend ne démarre pas :**
+```bash
+# Vérifier les logs
+sudo -u divemanager pm2 logs divemanager-server
+
+# Redémarrer
+sudo -u divemanager pm2 restart divemanager-server
+```
+
+**Base de données corrompue :**
+```bash
+# Restaurer depuis une sauvegarde
+cd /var/www/divemanager/server
+sudo -u divemanager node scripts/restore-db.js backups/derniere-sauvegarde.db
+```
+
+**Nginx erreur 502 :**
+```bash
+# Vérifier que le backend fonctionne
+curl http://localhost:3001/api/health
+
+# Redémarrer Nginx
+systemctl restart nginx
+```
+
+### Support et Logs
+
+```bash
+# Diagnostic complet
+echo "=== STATUS PM2 ===" && sudo -u divemanager pm2 status
+echo "=== STATUS NGINX ===" && systemctl status nginx
+echo "=== HEALTH CHECK ===" && curl -s http://localhost/api/health | jq
+echo "=== DISK SPACE ===" && df -h
+echo "=== MEMORY ===" && free -h
+```
 
 ## 📱 Support NFC
 
@@ -210,57 +406,6 @@ cd server && npm run backup
 # Restaurer depuis une sauvegarde
 cd server && npm run restore backups/divemanager-backup-2024-01-15.db
 ```
-
-## 🔒 Sécurité et Production
-
-### Configuration HTTPS
-
-```bash
-# Installer Certbot
-sudo apt install -y certbot python3-certbot-nginx
-
-# Obtenir le certificat SSL
-sudo certbot --nginx -d votre-domaine.com
-```
-
-### Firewall
-
-```bash
-sudo ufw allow 80/tcp
-sudo ufw allow 443/tcp
-sudo ufw enable
-```
-
-## 🛠️ Maintenance
-
-### Mise à jour
-
-```bash
-cd /var/www/divemanager
-
-# Mettre à jour le code
-git pull origin main
-
-# Mettre à jour les dépendances
-npm install
-cd server && npm install
-
-# Rebuilder et redémarrer
-npm run build
-pm2 restart divemanager-server
-systemctl reload nginx
-```
-
-## 🎯 Points Clés de l'Architecture Locale
-
-✅ **Auto-hébergé** : Contrôle total de vos données  
-✅ **SQLite** : Base de données locale performante  
-✅ **QR Code + NFC** : Double technologie de scan  
-✅ **API REST** : Backend Express robuste  
-✅ **Sauvegardes** : Scripts automatisés  
-✅ **Mobile-first** : Interface optimisée  
-✅ **Installation simple** : Scripts Debian inclus  
-✅ **Pas de cloud** : Fonctionne hors ligne  
 
 ## 💡 Technologies NFC
 
