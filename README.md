@@ -36,34 +36,41 @@ DiveManager/
 └── deployment/            # Scripts de déploiement
 ```
 
-## 🚀 Installation sur Debian/Raspberry Pi
+## 🚀 Installation Simple sur Debian
 
-### 1. Installation Rapide (Recommandée)
-
-```bash
-# Télécharger et installer en une commande
-curl -fsSL https://raw.githubusercontent.com/votre-repo/divemanager/main/deployment/install-complete.sh | sudo bash -s votre-domaine.com
-```
-
-### 2. Installation Manuelle
+### Installation Automatique (2 commandes)
 
 ```bash
-# 1. Installation des dépendances système
-sudo bash deployment/install-complete.sh votre-domaine.com
+# 1. Installation système
+sudo bash deployment/install-complete.sh
 
-# 2. Copier les fichiers de l'application dans /var/www/divemanager
-
-# 3. Installation des dépendances Node.js
-cd /var/www/divemanager
-npm install
-cd server && npm install && npm run build && cd ..
-npm run build
-
-# 4. Configuration production
-sudo bash deployment/configure-production.sh votre-domaine.com
+# 2. Configuration (après avoir copié les fichiers)
+sudo bash deployment/configure-production.sh
 ```
 
-### 3. Vérification de l'Installation
+**C'est tout !** L'application sera accessible sur `http://[IP-de-votre-serveur]`
+
+### Détails d'Installation
+
+```bash
+# Trouver l'IP de votre serveur
+hostname -I
+
+# Exemple d'accès
+# Si IP = 192.168.1.100, alors : http://192.168.1.100
+```
+
+### Avec Nom de Serveur (Optionnel)
+
+```bash
+# Si vous voulez un nom personnalisé
+sudo bash deployment/install-complete.sh monserveur.local
+sudo bash deployment/configure-production.sh monserveur.local
+
+# Accès : http://monserveur.local
+```
+
+### Vérification
 
 ```bash
 # Vérifier le backend
@@ -73,7 +80,7 @@ sudo -u divemanager pm2 status
 systemctl status nginx
 
 # Tester l'API
-curl http://votre-domaine.com/api/health
+curl http://localhost/api/health
 
 # Voir les logs
 tail -f /var/log/divemanager/combined.log

@@ -1,13 +1,17 @@
 #!/bin/bash
 
 # Script d'installation complète DiveManager sur Debian
-# Usage: sudo bash install-complete.sh [votre-domaine.com]
+# Usage: 
+#   Installation locale : sudo bash install-complete.sh
+#   Avec domaine/IP   : sudo bash install-complete.sh monserveur.local
+#   Avec IP          : sudo bash install-complete.sh 192.168.1.100
 
-DOMAIN=${1:-localhost}
+DOMAIN=${1:-$(hostname -I | awk '{print $1}')}
 APP_DIR="/var/www/divemanager"
 SERVER_DIR="$APP_DIR/server"
 
-echo "🚀 Installation complète de DiveManager pour le domaine: $DOMAIN"
+echo "🚀 Installation complète de DiveManager"
+echo "📍 Serveur accessible sur: http://$DOMAIN"
 
 # Vérification des droits root
 if [ "$EUID" -ne 0 ]; then

@@ -1,13 +1,14 @@
 #!/bin/bash
 
 # Script de configuration production pour DiveManager
-# Usage: sudo bash configure-production.sh [votre-domaine.com]
+# Usage: 
+#   Configuration locale : sudo bash configure-production.sh
+#   Avec nom/IP         : sudo bash configure-production.sh monserveur.local
 
-DOMAIN=${1:-localhost}
+DOMAIN=${1:-$(hostname -I | awk '{print $1}')}
 APP_DIR="/var/www/divemanager"
 SERVER_DIR="$APP_DIR/server"
 
-echo "🔧 Configuration de DiveManager en production pour: $DOMAIN"
 
 # Vérification que l'application est installée
 if [ ! -d "$APP_DIR" ] || [ ! -d "$SERVER_DIR" ]; then
